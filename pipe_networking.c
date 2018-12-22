@@ -2,14 +2,6 @@
 #include <ctype.h>
 #include <signal.h>
 
-static void sighandler(int signo) {
-    if (signo == SIGINT) {
-        printf("\nremoving wkp\n");
-        remove("wkp");
-        printf("Program ending due to SIGINT\n");
-        exit(0);
-    }
-}
 /*=========================
   server_handshake
   args: int * to_client
@@ -20,6 +12,7 @@ static void sighandler(int signo) {
   returns the file descriptor for the upstream pipe.
   =========================*/
 int server_handshake(int *to_client) {
+    remove("wkp");
     if(mkfifo("wkp", 0666) == -1) {
         perror("mkfifo");
         exit(1);
@@ -73,38 +66,15 @@ int server_handshake(int *to_client) {
     printf("======================\n");
     //printf("donezo\n");
 
-    while(1) {
-        if (read(up, cli_resp, BUFFER_SIZE) == -1) {
-            perror("read");
-        } else {
-            printf("getting data from client\n");
-        }
 
-        printf("processing data\n");
-        printf("before: %s ", cli_resp);
-        char * processed = malloc(sizeof(char *) * BUFFER_SIZE);
-        int i;
-        for (i = -0;i < (int)strlen(cli_resp);i++){
-            processed[i] = toupper(cli_resp[i]);
-        }
+    //if(close(*to_client) == -1) {
+    //    perror("close");
+    //} else {
+    //    printf("closed connections to the client\n");
+    //}
 
-        printf("after: %s\n", processed);
-
-        if (write(*to_client, processed, BUFFER_SIZE) == -1) {
-            perror("write");
-        } else {
-            printf("sending processed data back to client\n");
-        }
-    }
-
-    if(close(*to_client) == -1) {
-        perror("close");
-    } else {
-        printf("closed connections to the client\n");
-    }
-
-    free(cli_resp);
-    close(up);
+    //free(cli_resp);
+    //close(up);
     return up;
 }
 
@@ -160,7 +130,7 @@ int client_handshake(int *to_server) {
     printf("server's msg: %s\n", buffer);
     printf("======================\n");
 
-    if (write(*to_server, "hi serve", BUFFER_SIZE) == -1) {
+    if (write(*to_server, ACK, BUFFER_SIZE) == -1) {
         perror("write");
         exit(1);
     } else {
@@ -170,37 +140,5 @@ int client_handshake(int *to_server) {
     //=====================================================
     // End of Handshake
     //=====================================================
-    printf("If you ctrl-c the server will also close because I can't figure out how to reset it :'(\n"); 
-    while(1) {
-        //should end when interrupted with ctrl-c
-        signal(SIGINT, sighandler);
-
-        printf("input: ");
-        char * input = malloc(sizeof(char) * 100);
-        if(fgets(input, 100, stdin) == NULL ) {
-            perror("fgets");
-        }
-
-        if (write(*to_server, input, BUFFER_SIZE) == -1) {
-            perror("write");
-            exit(1);
-        } else {
-            printf("sending %s to server\n", input);
-        }
-
-        if (read(down, buffer, BUFFER_SIZE) == -1) {
-            perror("read");
-            exit(1);
-        } else {
-            printf("============================\n");
-            printf("response from server: %s\n", buffer);
-            printf("============================\n");
-        }
-        free(input);
-    }
-   
-    //free(buffer);
-    //close(*to_server);
-    close(down);
     return down;
 }
