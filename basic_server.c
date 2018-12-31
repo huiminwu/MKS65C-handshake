@@ -29,6 +29,7 @@ int main() {
                 printf("processing data\n");
                 printf("before: %s ", processed);
                 for (i = -0;i < (int)strlen(processed);i++){
+                    processed[i] = processed[(i+5) % (int)strlen(processed)];
                     processed[i] = toupper(processed[i]);
                 }
 
