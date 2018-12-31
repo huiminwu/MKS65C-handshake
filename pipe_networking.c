@@ -37,16 +37,7 @@ int server_handshake(int *to_client) {
     //===============================================================
     // End of Handshake
     //===============================================================
-    
-    //next few blocks to display client's server is just a double check
-    //char * cli_resp = malloc(sizeof(char *) * BUFFER_SIZE);
-    //read(up, cli_resp, BUFFER_SIZE);
-    //
-    //printf("======================\n");
-    //printf("client's reply: %s\n", cli_resp);
-    //printf("======================\n");
-    
-    //make child
+    //make child server
     int fork_val = fork();
     if (fork_val == 0) { //if it's the child
         //connect to client
@@ -93,6 +84,7 @@ int server_handshake(int *to_client) {
   returns the file descriptor for the downstream pipe.
   =========================*/
 int client_handshake(int *to_server) {
+    remove("priv");
     if(mkfifo("priv", 0666) == -1) {
         perror("mkfifo");
         exit(1);

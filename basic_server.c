@@ -44,5 +44,4 @@ int main() {
         }
     }
     free(processed);
-    return 0;
 }
