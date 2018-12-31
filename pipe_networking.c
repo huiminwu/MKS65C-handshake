@@ -34,48 +34,52 @@ int server_handshake(int *to_client) {
         exit(1);
     }
 
-    //printf("removing wkp\n");
-    //remove("wkp");
-    printf("connecting to client fifo\n");
-    *to_client = open(pfifo, O_WRONLY);
-    if (*to_client != -1) {
-        printf("successful connection!\n");
-    } else {
-        printf("no connection!\n");
-    }
-
-    printf("sending ack\n");
-    if(write(*to_client, ACK, BUFFER_SIZE) == -1) {
-        perror("write");
-        exit(1);
-    } else {
-        printf("sent initial msg!\n");
-    }
-
-
     //===============================================================
     // End of Handshake
     //===============================================================
     
     //next few blocks to display client's server is just a double check
-    char * cli_resp = malloc(sizeof(char *) * BUFFER_SIZE);
-    read(up, cli_resp, BUFFER_SIZE);
+    //char * cli_resp = malloc(sizeof(char *) * BUFFER_SIZE);
+    //read(up, cli_resp, BUFFER_SIZE);
+    //
+    //printf("======================\n");
+    //printf("client's reply: %s\n", cli_resp);
+    //printf("======================\n");
     
-    printf("======================\n");
-    printf("client's reply: %s\n", cli_resp);
-    printf("======================\n");
-    //printf("donezo\n");
+    //make child
+    int fork_val = fork();
+    if (fork_val == 0) { //if it's the child
+        //connect to client
+        printf("connecting to client fifo\n");
+        *to_client = open(pfifo, O_WRONLY);
+        if (*to_client != -1) {
+            printf("successful connection!\n");
+        } else {
+            printf("no connection!\n");
+        }
+        //handshake
+        printf("sending ack\n");
+        if(write(*to_client, ACK, BUFFER_SIZE) == -1) {
+            perror("write");
+            exit(1);
+        } else {
+            printf("sent initial msg!\n");
+        }
+        //getting reply
+        char * cli_resp = malloc(sizeof(char *) * BUFFER_SIZE);
+        read(up, cli_resp, BUFFER_SIZE);
+        
+        printf("======================\n");
+        printf("client's reply: %s\n", cli_resp);
+        printf("======================\n");
+        return up;
 
-
-    //if(close(*to_client) == -1) {
-    //    perror("close");
-    //} else {
-    //    printf("closed connections to the client\n");
-    //}
-
-    //free(cli_resp);
-    //close(up);
-    return up;
+    } else {
+        //remove wkp
+        printf("removing wkp\n");
+        remove("wkp");
+    }
+    return 0; //shouldn't return up anymore
 }
 
 
